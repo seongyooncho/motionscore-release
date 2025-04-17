@@ -1,33 +1,43 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
 
-# Usage: install_motionscore.sh <GoogleDrive file ID> [output_filename]
-if [ $# -lt 1 ]; then
-  echo "Usage: $0 <GoogleDrive file ID> [output_filename]"
+set -e
+
+GFILE_ID=$1
+if [ -z "$GFILE_ID" ]; then
+  echo "Usage: $0 <Google Drive FILE ID>"
   exit 1
 fi
 
-GFILE_ID="$1"
-OUTPUT="${2:-MotionScore.tar.gz}"
-
-# 1) Install Homebrew
-if ! command -v brew >/dev/null 2>&1; then
-  echo "Homebrew not found. Installing Homebrew..."
+# 1. Check and install Homebrew
+if ! command -v brew &> /dev/null; then
+  echo "[INFO] Homebrew not found. Installing..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  # Add Homebrew to PATH for current and future sessions
+  echo >> "$HOME/.zprofile"
+  echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$HOME/.zprofile"
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+  echo "[INFO] Homebrew is already installed."
 fi
 
-# 2) Install Brew Packages
-echo "Installing packages: qt, opencv, gdown, tmate"
+# 2. Install dependencies
+echo "[INFO] Installing dependencies: qt, opencv, gdown, tmate"
 brew install qt opencv gdown tmate
 
-# 3) Download from Google Drive
-echo "Downloading file from Google Drive (ID: $GFILE_ID) → $HOME/$OUTPUT"
-cd "$HOME"
-gdown --id "$GFILE_ID" -O "$OUTPUT"
+# 3. Download file from Google Drive
+echo "[INFO] Downloading MotionScore archive..."
+gdown "$GFILE_ID"
 
-# 4) Extract (Overwrite)
-echo "Extracting $OUTPUT to $HOME (overwrite existing files)"
-tar -xzf "$OUTPUT" -C "$HOME"
+# 4. Extract archive to ~
+ARCHIVE_NAME=$(ls MotionScore_v*.tar.gz | head -n 1)
+if [ -z "$ARCHIVE_NAME" ]; then
+  echo "[ERROR] Download failed or unexpected filename."
+  exit 1
+fi
 
-echo "✅ Done."
+echo "[INFO] Extracting $ARCHIVE_NAME..."
+tar -xvzf "$ARCHIVE_NAME" -C "$HOME"
+
+echo "[DONE] MotionScore installed to $HOME"
 
