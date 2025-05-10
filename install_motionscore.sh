@@ -33,7 +33,7 @@ brew install qt opencv gdown tmate
 echo "[INFO] Downloading MotionScore archive..."
 gdown "$GFILE_ID"
 
-ARCHIVE_NAME=$(ls MotionScore_v*.tar.gz | head -n 1)
+ARCHIVE_NAME=$(ls -t MotionScore_v*.tar.gz | head -n 1)
 if [ -z "$ARCHIVE_NAME" ]; then
   echo "[ERROR] Archive not found. Download failed?"
   exit 1
